@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="a34dd284-2365-4789-878c-61bd9ce22e2b" activeEnvironment="Default" name="Comment" resourceRoot="" soapui-version="5.4.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:testSuite id="b96f842b-922f-43da-8212-d61468ec5943" name="Testiranje komentara"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="4625e01a-d605-45b4-9d1a-01515d86c1e3" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Add Parent Comments" searchProperties="true"><con:settings/><con:testStep type="groovy" name="ReadDataFromCSV" id="ee19efce-e381-4941-b59c-93ef4e8af95c"><con:settings/><con:config><script>def groovyUtils = new com.eviware.soapui.support.GroovyUtils(context)
+def projectPath = groovyUtils.projectPath
+
+context.fileReader = new BufferedReader(new FileReader(projectPath+ "\\CSVData\\slanje_parent_komentara.csv"))
+
+rowsData = context.fileReader.readLines()
+
+  int rowsize = rowsData.size()
+for(int i=0; i &lt; rowsize; i++){
+ sleep(500)
+ String[] propData = rowsData[i].split(",")
+ curTC = testRunner.testCase
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentTitle",propData[0])
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentText",propData[1])
+ curTC.getTestStepByName("Properties").setPropertyValue("AuthorName",propData[2])
+
+log.info propData[0]
+log.info propData[1]
+log.info propData[2]
+
+ testRunner.runTestStepByName("SendParentComments")
+}</script></con:config></con:testStep><con:testStep type="properties" name="Properties" id="c7a84903-7f0a-43ab-9ecf-9376a67a1b5d"><con:settings/><con:config xsi:type="con:PropertiesStep" saveFirst="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:properties><con:property><con:name>CommentTitle</con:name><con:value xsi:nil="true"/></con:property><con:property><con:name>CommentText</con:name><con:value xsi:nil="true"/></con:property><con:property><con:name>AuthorName</con:name><con:value xsi:nil="true"/></con:property></con:properties></con:config></con:testStep><con:testStep type="httprequest" name="SendParentComments" id="6935239a-ba79-4c8e-90f8-cda66d7f009b" disabled="true"><con:settings/><con:config method="POST" xsi:type="con:HttpRequest" id="010c0810-77f2-4d1d-9068-475cbd7486c9" name="SendParentComments" postQueryString="false" mediaType="application/json" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://skrs.wm.rs/api/v3/comments</con:endpoint><con:request>{
+"Comment": {
+    "DocumentId": "${#Project#DocumentId}",
+    "CommentTitle": "${Properties#CommentTitle}",
+    "CommentText": "${Properties#CommentText}",
+    "AuthorName" : "${Properties#AuthorName}"
+  } 
+}</con:request><con:assertion type="Valid HTTP Status Codes" id="fc7acb2c-6f9a-49a5-9d44-f82ecb900b72" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>http://skrs.wm.rs:80/api/v3/comments</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="delay" name="Delay" id="df927a6f-8847-441c-89ee-6d56f7e0e7ec"><con:settings/><con:config><delay>20000</delay></con:config></con:testStep><con:tearDownScript>curTC = testRunner.testCase
+curTC.getTestStepByName("Properties").clearPropertyValues()
+
+log.info messageExchange.modelItem.propertyNames</con:tearDownScript><con:properties/></con:testCase><con:testCase id="ce7631d9-04c4-45e4-83d2-f07a77555312" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Add Child Comments" searchProperties="true"><con:settings/><con:testStep type="httprequest" name="GetParentComments" id="225d0628-956e-49c4-8ff8-d92ab81e5fad"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="3652a27f-d85c-46c4-bd4e-94d279d4ef85" name="GetParentComments" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://skrs.wm.rs/api/v3/documents/${#Project#DocumentId}/comments</con:endpoint><con:request/><con:assertion type="Valid HTTP Status Codes" id="58b9e5c1-0622-4b15-9ce0-842cbda50bfd" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>http://skrs.wm.rs/api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="ReadDataFromCSV" id="4f0ebe1d-30e4-4d4a-8471-926f4969cbe7"><con:settings/><con:config><script>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+def groovyUtils = new com.eviware.soapui.support.GroovyUtils(context)
+def projectPath = groovyUtils.projectPath
+
+context.fileReader = new BufferedReader(new FileReader(projectPath + "\\CSVData\\slanje_child_komentara.csv"))
+
+rowsData = context.fileReader.readLines()
+ 
+ //Add first child comment to Parent 1
+ String[] propData = rowsData[0].split(",")
+ curTC = testRunner.testCase
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentId",json.CommentId[4].toString())
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentTitle",propData[0])
+ curTC.getTestStepByName("Properties").setPropertyValue("AuthorName",propData[1])
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentText",propData[2])
+
+ testRunner.runTestStepByName("AddChildComments")
+ sleep(500)
+
+ //Add second child comment to Parent 1
+ propData = rowsData[1].split(",")
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentId",json.CommentId[4].toString())
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentTitle",propData[0])
+ curTC.getTestStepByName("Properties").setPropertyValue("AuthorName",propData[1])
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentText",propData[2])
+
+ testRunner.runTestStepByName("AddChildComments")
+ sleep(500)
+
+ //Add first child comment to Parent 3
+ propData = rowsData[2].split(",")
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentId",json.CommentId[2].toString())
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentTitle",propData[0])
+ curTC.getTestStepByName("Properties").setPropertyValue("AuthorName",propData[1])
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentText",propData[2])
+
+ testRunner.runTestStepByName("AddChildComments")
+ sleep(500)
+
+ //Add second child comment to Parent 3
+ propData = rowsData[3].split(",")
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentId",json.CommentId[2].toString())
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentTitle",propData[0])
+ curTC.getTestStepByName("Properties").setPropertyValue("AuthorName",propData[1])
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentText",propData[2])
+
+ testRunner.runTestStepByName("AddChildComments")
+ sleep(500)
+
+ //Add third child comment to Parent 3
+ propData = rowsData[4].split(",")
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentId",json.CommentId[2].toString())
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentTitle",propData[0])
+ curTC.getTestStepByName("Properties").setPropertyValue("AuthorName",propData[1])
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentText",propData[2])
+
+ testRunner.runTestStepByName("AddChildComments")
+ sleep(500)
+
+ //Add first child comment to Parent 4
+ propData = rowsData[5].split(",")
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentId",json.CommentId[1].toString())
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentTitle",propData[0])
+ curTC.getTestStepByName("Properties").setPropertyValue("AuthorName",propData[1])
+ curTC.getTestStepByName("Properties").setPropertyValue("CommentText",propData[2])
+
+ testRunner.runTestStepByName("AddChildComments")
+ sleep(500)
+
+ 
+log.info propData[0]
+log.info propData[1]
+log.info propData[2]</script></con:config></con:testStep><con:testStep type="properties" name="Properties" id="9c95bd88-1a67-46b2-8d9d-be3e9bbace32"><con:settings/><con:config xsi:type="con:PropertiesStep" saveFirst="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:properties><con:property><con:name>CommentId</con:name><con:value>56237</con:value></con:property><con:property><con:name>CommentTitle</con:name><con:value>title6</con:value></con:property><con:property><con:name>AuthorName</con:name><con:value>ParentChild41</con:value></con:property><con:property><con:name>CommentText</con:name><con:value>like 6 dislike 2</con:value></con:property></con:properties></con:config></con:testStep><con:testStep type="httprequest" name="AddChildComments" id="429ce013-6516-4a27-bf26-f72e3f62711e" disabled="true"><con:settings/><con:config method="POST" xsi:type="con:HttpRequest" id="f5dfa43d-83ce-478f-b93f-4d8e8c516ecc" name="AddChildComments" postQueryString="false" mediaType="application/json" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://skrs.wm.rs:80/api/v3/comments</con:endpoint><con:request>{
+  "Comment": {
+    "DocumentId": "${#Project#DocumentId}",
+    "CommentId": "${Properties#CommentId}",
+    "CommentTitle": "${Properties#CommentTitle}",
+    "AuthorName": "${Properties#AuthorName}",
+    "CommentText": "${Properties#CommentText}"
+  }
+}</con:request><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>http://skrs.wm.rs:80/api/v3/comments</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="delay" name="Delay" id="d4fcb29c-7e67-413b-b382-d18fa626ddda"><con:settings/><con:config><delay>20000</delay></con:config></con:testStep><con:tearDownScript>curTC = testRunner.testCase
+curTC.getTestStepByName("Properties").clearPropertyValues()</con:tearDownScript><con:properties/></con:testCase><con:testCase id="3df96648-06ba-4930-9685-b5cb1ade7eef" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Add Likes Dislikes" searchProperties="true"><con:settings/><con:testStep type="httprequest" name="GetComments" id="d77a917b-16d7-46b9-80f4-b30afdc8dd59"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="78615c72-fed3-4277-8f6c-d5d3ce34f8c8" name="GetComments" postQueryString="false" mediaType="application/json" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://skrs.wm.rs:80/api/v3/documents/${#Project#DocumentId}/comments?commentsByPageNumber=15</con:endpoint><con:request/><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>http://skrs.wm.rs:80/api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="ReadCommentIdFromResponse" id="4ad1722a-4689-4a36-a5b4-35d7f567eac1"><con:settings/><con:config><script><![CDATA[import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+curTC = testRunner.testCase
+
+//Send 12 likes to Parent 5
+for(int i=0; i<12; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Like",json.CommentId[0].toString())
+testRunner.runTestStepByName("SendLike")
+}
+
+//Send 2 dislikes to Parent 5
+for(int i=0; i<2; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Dislike",json.CommentId[0].toString())
+testRunner.runTestStepByName("SendDislike")
+}
+
+//Send 4 likes to Parent 4
+for(int i=0; i<4; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Like",json.CommentId[1].toString())
+testRunner.runTestStepByName("SendLike")
+}
+
+//Send 10 dislikes to Parent 4
+for(int i=0; i<10; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Dislike",json.CommentId[1].toString())
+testRunner.runTestStepByName("SendDislike")
+}
+
+//Send 6 likes to ParentChild41
+for(int i=0; i<6; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Like",json.CommentId[2].toString())
+testRunner.runTestStepByName("SendLike")
+}
+
+//Send 2 dislikes to ParentChild41
+for(int i=0; i<2; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Dislike",json.CommentId[2].toString())
+testRunner.runTestStepByName("SendDislike")
+}
+
+//Send 12 likes to Parent 3
+for(int i=0; i<12; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Like",json.CommentId[3].toString())
+testRunner.runTestStepByName("SendLike")
+}
+
+//Send 2 likes to ParentChild32
+for(int i=0; i<2; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Like",json.CommentId[5].toString())
+testRunner.runTestStepByName("SendLike")
+}
+
+//Send 2 dislikes to ParentChild33
+for(int i=0; i<2; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Dislike",json.CommentId[6].toString())
+testRunner.runTestStepByName("SendDislike")
+}
+
+//Send 20 likes to Parent 2
+for(int i=0; i<20; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Like",json.CommentId[7].toString())
+testRunner.runTestStepByName("SendLike")
+}
+
+//Send 2 dislikes to Parent 2
+for(int i=0; i<2; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Dislike",json.CommentId[7].toString())
+testRunner.runTestStepByName("SendDislike")
+}
+
+//Send 10 likes to Parent 1
+for(int i=0; i<10; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Like",json.CommentId[8].toString())
+testRunner.runTestStepByName("SendLike")
+}
+
+//Send 1 dislikes to Parent 1
+for(int i=0; i<1; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Dislike",json.CommentId[8].toString())
+testRunner.runTestStepByName("SendDislike")
+}
+
+//Send 3 dislikes to ParentChild11
+for(int i=0; i<3; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Dislike",json.CommentId[9].toString())
+testRunner.runTestStepByName("SendDislike")
+}
+
+//Send 1 likes to ParentChild12
+for(int i=0; i<1; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Like",json.CommentId[10].toString())
+testRunner.runTestStepByName("SendLike")
+}
+
+//Send 1 dislikes to ParentChild12
+for(int i=0; i<1; i++)
+{
+curTC.getTestStepByName("Properties").setPropertyValue("Dislike",json.CommentId[10].toString())
+testRunner.runTestStepByName("SendDislike")
+}]]></script></con:config></con:testStep><con:testStep type="properties" name="Properties" id="46e663b2-80c7-412a-8c5f-563d38f00a2f"><con:settings/><con:config xsi:type="con:PropertiesStep" saveFirst="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:properties><con:property><con:name>Like</con:name><con:value>56353</con:value></con:property><con:property><con:name>Dislike</con:name><con:value>56353</con:value></con:property></con:properties></con:config></con:testStep><con:testStep type="httprequest" name="SendLike" id="4563e165-e083-4a71-9113-30c35cbf65a9" disabled="true"><con:settings/><con:config method="PUT" xsi:type="con:HttpRequest" id="1be1e931-3c2e-4573-8239-a60002438034" name="SendLike" postQueryString="false" mediaType="application/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://skrs.wm.rs:80/api/v3/comments/${Properties#Like}/likes</con:endpoint><con:request/><con:assertion type="Valid HTTP Status Codes" id="acff5a53-6799-4e43-95ff-1e92e8b30f74" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>http://skrs.wm.rs:80/api/v3/comments</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="httprequest" name="SendDislike" id="721840b1-4730-460f-ba43-10c6a61c09a0" disabled="true"><con:settings/><con:config method="PUT" xsi:type="con:HttpRequest" id="2378a37c-300d-4cd5-9fb8-369b435fa0d2" name="SendDislike" postQueryString="false" mediaType="application/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://skrs.wm.rs:80/api/v3/comments/${Properties#Dislike}/dislikes</con:endpoint><con:request/><con:assertion type="Valid HTTP Status Codes" id="f1a5d128-78f2-4528-8d3e-1aef5287de36" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>http://skrs.wm.rs:80/api/v3/comments</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:tearDownScript>curTC = testRunner.testCase
+curTC.getTestStepByName("Properties").clearPropertyValues()</con:tearDownScript><con:properties/></con:testCase><con:testCase id="b596edf4-d96f-47fd-bb71-9575cfef66cf" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Chronological Tree Ascending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Chronological Tree Ascending" id="24667ab2-1c97-4446-81a9-79456973f561"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="9ca92540-8008-4fdf-aec0-a4de16c25d1e" name="Test Chronological Tree Ascending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}api/v3/documents/${#Project#DocumentId}/comments/chronological?structure=Tree&amp;order=Ascending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="cb2793d9-2c5f-48b5-98d6-e621fa45ffec" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent1"
+
+//Check second comment
+assert json[1].Title == "ParentChild11"
+
+//Check third comment
+assert json[2].Title == "ParentChild12"
+
+//Check fourth comment
+assert json[3].Title == "Parent2"
+
+//Check fifth comment
+assert json[4].Title == "Parent3"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild31"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild32"
+
+//Check eight comment
+assert json[7].Title == "ParentChild33"
+
+//Check nineth comment
+assert json[8].Title == "Parent4"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild41"
+
+//Check eleventh comment
+assert json[10].Title == "Parent5"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="52207ad7-2aa3-409b-9142-9b0e757be727" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Chronological Tree Descending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Chronological Tree Descending" id="4dc4c3f6-bd20-4003-9260-8ab9292ac683"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="20535b16-26c0-425d-ba1f-afc8a42c7003" name="Test Chronological Tree Descending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}api/v3/documents/${#Project#DocumentId}/comments/chronological?structure=Tree&amp;order=Descending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="6826ec15-428b-41d0-9673-b915de34dc8a" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent5"
+
+//Check second comment
+assert json[1].Title == "Parent4"
+
+//Check third comment
+assert json[2].Title == "ParentChild41"
+
+//Check fourth comment
+assert json[3].Title == "Parent3"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild31"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild32"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild33"
+
+//Check eight comment
+assert json[7].Title == "Parent2"
+
+//Check nineth comment
+assert json[8].Title == "Parent1"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild11"
+
+//Check eleventh comment
+assert json[10].Title == "ParentChild12"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="ff66c2fc-68c8-452a-8027-7409d14c0de2" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Most Popular Tree Ascending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Most Popular Tree Ascending" id="aae6aa34-b08b-4c84-8d94-5bcbfc396271"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="f5c888d9-e429-4e74-ac2f-5064d2ef245c" name="Test Most Popular Tree Ascending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}api/v3/documents/${#Project#DocumentId}/comments/popular?structure=Tree&amp;order=Ascending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="cc9e7c7a-879f-410f-9fda-3ef2ab8b6fb2" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent5"
+
+//Check second comment
+assert json[1].Title == "Parent3"
+
+//Check third comment
+assert json[2].Title == "ParentChild31"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild32"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild33"
+
+//Check sixt comment
+assert json[5].Title == "Parent1"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild11"
+
+//Check eight comment
+assert json[7].Title == "ParentChild12"
+
+//Check nineth comment
+assert json[8].Title == "Parent4"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild41"
+
+//Check eleventh comment
+assert json[10].Title == "Parent2"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="233e816f-1307-4381-a74a-d626cfd0263c" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Most Popular Tree Descending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Most Popular Tree Descending" id="6e9c5502-147b-4ef5-9e7d-bb515714e4c2"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="69bf6f4b-c874-4eb6-9db0-a17530dcd52d" name="Test Most Popular Tree Descending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/popular?structure=Tree&amp;order=Descending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="291663f2-14b9-437e-ae58-0b6f02bcd484" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent4"
+
+//Check second comment
+assert json[1].Title == "ParentChild41"
+
+//Check third comment
+assert json[2].Title == "Parent2"
+
+//Check fourth comment
+assert json[3].Title == "Parent3"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild31"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild32"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild33"
+
+//Check eight comment
+assert json[7].Title == "Parent1"
+
+//Check nineth comment
+assert json[8].Title == "ParentChild11"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild12"
+
+//Check eleventh comment
+assert json[10].Title == "Parent5"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="793af33c-2392-4a99-a556-5c59ce4368d9" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Recommended Tree Ascending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Recommended Tree Ascending" id="ff64d255-e22a-4e83-b0fd-465a1c058e2a"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="7c40011e-58b9-4a89-b818-480224bfd725" name="Test Recommended Tree Ascending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}api/v3/documents/${#Project#DocumentId}/comments/recomended?structure=Tree&amp;order=Ascending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="6f27b006-683d-4d9f-aba5-fdb7ba78d006" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent4"
+
+//Check second comment
+assert json[1].Title == "ParentChild41"
+
+//Check third comment
+assert json[2].Title == "Parent1"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild11"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild12"
+
+//Check sixt comment
+assert json[5].Title == "Parent5"
+
+//Check seventh comment
+assert json[6].Title == "Parent3"
+
+//Check eight comment
+assert json[7].Title == "ParentChild31"
+
+//Check nineth comment
+assert json[8].Title == "ParentChild32"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild33"
+
+//Check eleventh comment
+assert json[10].Title == "Parent2"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="0520b707-85fa-434f-b860-33f46e40afd1" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Recommended Tree Descending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Recommended Tree Descending" id="317616da-dcd0-4deb-833d-9d55bce8ac58"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="b3dbfaa5-e121-490e-9eda-a2cb7396d018" name="Test Recommended Tree Descending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/recomended?structure=Tree&amp;order=Descending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="4e043989-0554-4e95-b006-16bde42b224a" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent2"
+
+//Check second comment
+assert json[1].Title == "Parent5"
+
+//Check third comment
+assert json[2].Title == "Parent3"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild31"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild32"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild33"
+
+//Check seventh comment
+assert json[6].Title == "Parent1"
+
+//Check eight comment
+assert json[7].Title == "ParentChild11"
+
+//Check nineth comment
+assert json[8].Title == "ParentChild12"
+
+//Check tenth comment
+assert json[9].Title == "Parent4"
+
+//Check eleventh comment
+assert json[10].Title == "ParentChild41"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="c4fe9267-d6a5-461a-9cf4-a12860878ccb" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Not Recommended Tree Ascending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Not Recommended Tree Ascending" id="3f2b9654-8ff9-44da-8e5c-edc4f4dcafce"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="5cd27a8c-bf55-4c8c-8ef0-134f622c41cc" name="Test Not Recommended Tree Ascending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/unrecomended?structure=Tree&amp;order=Ascending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="2c5c1bc8-9f91-4717-9558-4a5fe00bd876"><con:configuration/></con:assertion><con:assertion type="GroovyScriptAssertion" id="81040da4-6a55-45f3-8c16-235a56151109" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent3"
+
+//Check second comment
+assert json[1].Title == "ParentChild31"
+
+//Check third comment
+assert json[2].Title == "ParentChild32"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild33"
+
+//Check fifth comment
+assert json[4].Title == "Parent1"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild11"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild12"
+
+//Check eight comment
+assert json[7].Title == "Parent5"
+
+//Check nineth comment
+assert json[8].Title == "Parent2"
+
+//Check tenth comment
+assert json[9].Title == "Parent4"
+
+//Check eleventh comment
+assert json[10].Title == "ParentChild41"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="885706c5-3fe7-4a4b-81bc-94dd08148536" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Not Recommended Tree Descending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Not Recommended Tree Descending" id="140326df-f740-45ff-b575-c66e6bae0c46"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="46ad1677-cecc-49c5-99e5-cbac8964a1e0" name="Test Not Recommended Tree Descending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/unrecomended?structure=Tree&amp;order=Descending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="ea70c947-c0f3-40a0-9888-e83e95323421" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent4"
+
+//Check second comment
+assert json[1].Title == "ParentChild41"
+
+//Check third comment
+assert json[2].Title == "Parent5"
+
+//Check fourth comment
+assert json[3].Title == "Parent2"
+
+//Check fifth comment
+assert json[4].Title == "Parent1"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild11"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild12"
+
+//Check eight comment
+assert json[7].Title == "Parent3"
+
+//Check nineth comment
+assert json[8].Title == "ParentChild31"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild32"
+
+//Check eleventh comment
+assert json[10].Title == "ParentChild33"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="b75102e7-0d31-4bb2-8910-1b9038001402" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Chronological Linear Ascending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Chronological Linear Ascending" id="9db10189-7601-4150-9af1-683a27cb3e35"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="be3a0081-aab4-4e5c-b16d-c570a0f8c72b" name="Test Chronological Linear Ascending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/chronological?structure=Linear&amp;order=Ascending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="6be26978-1dab-4900-bfed-c4d34ae761d4" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent1"
+
+//Check second comment
+assert json[1].Title == "Parent2"
+
+//Check third comment
+assert json[2].Title == "Parent3"
+
+//Check fourth comment
+assert json[3].Title == "Parent4"
+
+//Check fifth comment
+assert json[4].Title == "Parent5"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild11"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild12"
+
+//Check eight comment
+assert json[7].Title == "ParentChild31"
+
+//Check nineth comment
+assert json[8].Title == "ParentChild32"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild33"
+
+//Check eleventh comment
+assert json[10].Title == "ParentChild41"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="329d3a34-9718-4bd3-98cc-99fdbdcffe12" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Chronological Linear Descending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Chronological Linear Descending" id="841b40ee-f960-4fe6-aca5-885517c2b979"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="53ed8331-eb1d-4afb-819e-95d1660b3ffa" name="Test Chronological Linear Descending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/chronological?structure=Linear&amp;order=Descending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="dfe63a5e-c187-44dd-866d-44c2fa1eaaf4" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "ParentChild41"
+
+//Check second comment
+assert json[1].Title == "ParentChild33"
+
+//Check third comment
+assert json[2].Title == "ParentChild32"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild31"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild12"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild11"
+
+//Check seventh comment
+assert json[6].Title == "Parent5"
+
+//Check eight comment
+assert json[7].Title == "Parent4"
+
+//Check nineth comment
+assert json[8].Title == "Parent3"
+
+//Check tenth comment
+assert json[9].Title == "Parent2"
+
+//Check eleventh comment
+assert json[10].Title == "Parent1"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="4bb5f06d-4c7c-46a6-937c-8dc7edce6299" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Most Popular Linear Ascending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Most Popular Linear Ascending" id="017567f6-2127-4056-ac9d-4b27424d9c39"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="0676495f-b361-4f6c-95a8-e007aa124c6e" name="Test Most Popular Linear Ascending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/popular?structure=Linear&amp;order=Ascending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="a8dd1edc-741f-47b8-b0e0-45d813253532" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "ParentChild31"
+
+//Check second comment
+assert json[1].Title == "ParentChild33"
+
+//Check third comment
+assert json[2].Title == "ParentChild32"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild12"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild11"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild41"
+
+//Check seventh comment
+assert json[6].Title == "Parent1"
+
+//Check eight comment
+assert json[7].Title == "Parent3"
+
+//Check nineth comment
+assert json[8].Title == "Parent5"
+
+//Check tenth comment
+assert json[9].Title == "Parent4"
+
+//Check eleventh comment
+assert json[10].Title == "Parent2"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="52edca42-a2d5-4610-b601-32f6008a69e6" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Most Popular Linear Descending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Most Popular Linear Descending" id="89715476-7a3a-4754-92bf-b6aaf58af0af"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="be792afc-4b1d-4492-99fc-7c891f342664" name="Test Most Popular Linear Descending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/popular?structure=Linear&amp;order=Descending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="378f7983-4d63-4d38-acae-dc36291cc909" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent2"
+
+//Check second comment
+assert json[1].Title == "Parent5"
+
+//Check third comment
+assert json[2].Title == "Parent4"
+
+//Check fourth comment
+assert json[3].Title == "Parent3"
+
+//Check fifth comment
+assert json[4].Title == "Parent1"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild41"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild11"
+
+//Check eight comment
+assert json[7].Title == "ParentChild33"
+
+//Check nineth comment
+assert json[8].Title == "ParentChild32"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild12"
+
+//Check eleventh comment
+assert json[10].Title == "ParentChild31"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="d37e7ca9-d0d7-421b-9d35-06dbfe7fe93f" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Recommended Linear Ascending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Recommended Linear Ascending" id="cabc303c-4d62-4f54-ba68-76e6821d6028"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="16ff3e05-80ee-4d8b-8f52-2cb5417c914c" name="Test Recommended Linear Ascending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/recomended?structure=Linear&amp;order=Ascending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="845c77b4-6e9e-4e41-8d29-01e4ebaac430" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "ParentChild33"
+
+//Check second comment
+assert json[1].Title == "ParentChild31"
+
+//Check third comment
+assert json[2].Title == "ParentChild11"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild12"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild32"
+
+//Check sixt comment
+assert json[5].Title == "Parent4"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild41"
+
+//Check eight comment
+assert json[7].Title == "Parent1"
+
+//Check nineth comment
+assert json[8].Title == "Parent5"
+
+//Check tenth comment
+assert json[9].Title == "Parent3"
+
+//Check eleventh comment
+assert json[10].Title == "Parent2"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="2171525c-03fc-4e2d-8da0-e1e2849167f6" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Recommended Linear Descending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Recommended Linear Descending" id="07379b4c-8fb3-46f8-9a1b-9499267fa44c"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="f75b865d-d607-41ca-b35f-d588ad3c5337" name="Test Recommended Linear Descending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/recomended?structure=Linear&amp;order=Descending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="42660e4a-e4b4-4a1a-83ef-da6b6194616b" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent2"
+
+//Check second comment
+assert json[1].Title == "Parent5"
+
+//Check third comment
+assert json[2].Title == "Parent3"
+
+//Check fourth comment
+assert json[3].Title == "Parent1"
+
+//Check fifth comment
+assert json[4].Title == "ParentChild41"
+
+//Check sixt comment
+assert json[5].Title == "Parent4"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild32"
+
+//Check eight comment
+assert json[7].Title == "ParentChild12"
+
+//Check nineth comment
+assert json[8].Title == "ParentChild33"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild31"
+
+//Check eleventh comment
+assert json[10].Title == "ParentChild11"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="024f529e-ea50-4141-8ff6-1bc528271abd" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Not Recommended Linear Ascending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Not Recommended Linear Ascending" id="eaa8be10-c71a-4280-9f40-16e3cbad5cee"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="c3ac7481-33f4-4bbf-8e01-d7730fc4b58f" name="Test Not Recommended Linear Ascending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/unrecomended?structure=Linear&amp;order=Ascending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="e4fbf851-9eab-47ad-a275-a9293aa8e6f1" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "ParentChild32"
+
+//Check second comment
+assert json[1].Title == "ParentChild31"
+
+//Check third comment
+assert json[2].Title == "Parent3"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild12"
+
+//Check fifth comment
+assert json[4].Title == "Parent1"
+
+//Check sixt comment
+assert json[5].Title == "ParentChild41"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild33"
+
+//Check eight comment
+assert json[7].Title == "Parent5"
+
+//Check nineth comment
+assert json[8].Title == "Parent2"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild11"
+
+//Check eleventh comment
+assert json[10].Title == "Parent4"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="c5755bb7-0dcf-41ff-9368-1eca329f90ac" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Test Not Recommended Linear Descending" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword=""><con:settings/><con:testStep type="httprequest" name="Test Not Recommended Linear Descending" id="197de0f9-d8d9-4faf-813e-b646eb101f88"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="0150cf51-603c-4864-baf7-1642833dd47a" name="Test Not Recommended Linear Descending" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://${#Project#Domain}/api/v3/documents/${#Project#DocumentId}/comments/unrecomended?structure=Linear&amp;order=Descending&amp;count=${#Project#commentsByPageNumber}</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="d0d1df94-961f-47c1-8078-fb5ba001b15a" name="Script Assertion"><con:configuration><scriptText>import groovy.json.JsonSlurper
+
+def json = new JsonSlurper().parseText(context.response)
+
+//Check first comment
+assert json[0].Title == "Parent4"
+
+//Check second comment
+assert json[1].Title == "ParentChild11"
+
+//Check third comment
+assert json[2].Title == "ParentChild41"
+
+//Check fourth comment
+assert json[3].Title == "ParentChild33"
+
+//Check fifth comment
+assert json[4].Title == "Parent5"
+
+//Check sixt comment
+assert json[5].Title == "Parent2"
+
+//Check seventh comment
+assert json[6].Title == "ParentChild12"
+
+//Check eight comment
+assert json[7].Title == "Parent1"
+
+//Check nineth comment
+assert json[8].Title == "ParentChild32"
+
+//Check tenth comment
+assert json[9].Title == "ParentChild31"
+
+//Check eleventh comment
+assert json[10].Title == "Parent3"</scriptText></con:configuration></con:assertion><con:credentials><con:username>1234</con:username><con:password>1234</con:password><con:domain>${#Project#Domain}api/v3/documents</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="974e7149-c9a9-41de-80a4-9535c4988b26" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Delete Comments" searchProperties="true"><con:settings/><con:testStep type="httprequest" name="DeleteComments" id="75cf235d-aaeb-4fa0-acac-65470bd6d266"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="b3e26f34-b4eb-4218-aca3-1c0308572726" name="DeleteComments" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://skrsbe.wm.rs:80/api/Comments/DeleteAllDocumentComments?documentId=${#Project#DocumentId}</con:endpoint><con:request/><con:assertion type="Valid HTTP Status Codes" id="2d03d98e-1327-41e1-8f67-aaf52a6706dd" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="manualTestStep" name="Manual TestStep" id="6cab0666-b18d-4d3a-b22c-1652c8d1c782" disabled="true"><con:description><![CDATA[W:\App\SportKlubSR\BE\Web.config
+
+U delu  <!-- ALLOW  ANONYMOUS ACCESS -->
+
+dodati api poziv metode 
+
+ <location path="OVDEEEEEEE">
+    <system.web>
+      <authorization>
+        <allow users="?"/>
+      </authorization>
+    </system.web>
+  </location>]]></con:description><con:settings/><con:config xsi:type="con:ManualTestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:expectedResult><![CDATA[W:\App\SportKlubSR\BE\Web.config
+
+U delu  <!-- ALLOW  ANONYMOUS ACCESS -->
+
+dodati api poziv metode 
+
+ <location path="OVDEEEEEEE">
+    <system.web>
+      <authorization>
+        <allow users="?"/>
+      </authorization>
+    </system.web>
+  </location>]]></con:expectedResult></con:config></con:testStep><con:properties/></con:testCase><con:properties/><con:tearDownScript/></con:testSuite><con:properties><con:property><con:name>DocumentId</con:name><con:value>233566</con:value></con:property><con:property><con:name>Domain</con:name><con:value>skrs.wm.rs:80/</con:value></con:property><con:property><con:name>commentsByPageNumber</con:name><con:value>15</con:value></con:property></con:properties><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:afterRunScript/><con:sensitiveInformation/></con:soapui-project>

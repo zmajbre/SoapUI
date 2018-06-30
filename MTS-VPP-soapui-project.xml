@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="c829edb7-140c-42c3-9f62-8254c2b9cd62" activeEnvironment="Default" name="MTS VPP" resourceRoot="" soapui-version="5.4.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:testSuite id="6c73e4c5-83be-4367-8fae-b9f37e238996" name="MTSBox 2 (TV + TEL)"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="5dfe3d9b-ad90-4adb-9122-7bd1099151f2" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="MTSBox 2 (TV + TEL)" searchProperties="true"><con:settings/><con:testStep type="httprequest" name="MTSBox 2 (TV + TEL)" id="de7f5b47-f8b4-48dc-9114-43225d089f70"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" id="531ab734-70c4-4310-8b0f-16c763aaf712" name="MTSBox 2 (TV + TEL)" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>${#Project#Domain}oec/api/v2/promotions/box-2-tv-tel/include-attributes-included-products/items-promotions</con:endpoint><con:request/><con:assertion type="GroovyScriptAssertion" id="14c1698c-9c52-45a8-991e-ed46489c5bb3" name="Script Assertion"><con:configuration><scriptText><![CDATA[import groovy.json.JsonSlurper
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+def response = new JsonSlurper().parseText(context.response)
+
+assert response.name instanceof String
+assert response.title instanceof String
+assert response.promo_text instanceof String
+assert response.items instanceof Object
+
+log.info ("ZARKOOOOOOO" + response)
+log.info response.name
+
+def is_featuredZeroOrOne = true;
+def itemsPromotionsEmptyOrNot = true;
+
+
+assert response.items.id instanceof Integer
+       assert response.items.original_id instanceof Integer
+       assert response.items.external_id instanceof String
+       assert response.items.name instanceof String
+       assert response.items.short_name instanceof String
+       
+       assert response.items.price_recurring instanceof Object
+       Pattern p1 = Pattern.compile ("(\\d+[\\.,\\,]?)+");
+       Matcher m1 = p1.matcher(response.items.price_recurring);
+    	  assert m1.matches()
+    	  assert response.items.is_featured instanceof Integer
+    	  if (response.items.is_featured != 0 && response.items.is_featured != 1) {
+           is_featuredZeroOrOne = false;
+       }
+    	  assert response.items.url instanceof String
+    	  assert response.items.promotions instanceof List
+    	  def emptyList = [];
+    	  if (response.items.promotions == emptyList) {
+    	  	itemsPromotionsEmptyOrNot = true;	
+    	  }
+    	  else if (response.items.promotions != emptyList){
+    	  	for (promotion in response.items.promotions) { 
+    	  		if (promotion.category_alias != "specialOfferAction"){
+    	  			itemsPromotionsEmptyOrNot = false
+    	  		}
+    	  	}	
+    	  }
+    	  assert response.items.included instanceof List
+       def hasAtLeastOneTvPackage = false;
+       def hasAtLeastOneCalls = false;     
+       def isRecomandedZeroOrOne = true;
+       def includedPromotionsEmptyOrNot = true;
+       
+       for (int j=0; j<response.items.included.size(); j++){
+           assert response.items.included[j].id instanceof Integer
+           assert response.items.included[j].original_id instanceof Integer
+           assert response.items.included[j].external_id instanceof String
+           assert response.items.included[j].long_name instanceof String
+           assert response.items.included[j].short_name instanceof String
+           assert response.items.included[j].description instanceof String
+           assert response.items.included[j].product_category instanceof Object
+           Pattern p2 = Pattern.compile ("(tv|tel)"); 
+           Matcher m2 = p2.matcher (response.items.included[j].product_category);
+           assert m2.matches()
+           if (response.items.included[j].product_category == "tv" && response.items.included[j].product_subtype == "tv-package") {
+           	hasAtLeastOneTvPackage = true;
+           }
+
+           if (response.items.included[j].product_category == "tel" && response.items.included[j].product_subtype == "calls") {
+           	hasAtLeastOneCalls = true;
+           }	
+          
+           if (response.items.included[j].is_recommended != 0 && response.items.included[j].is_recommended != 1) {
+           	isRecomandedZeroOrOne = false;
+           }
+           assert response.items.included[j].category_gallery instanceof Object
+           Pattern p3 = Pattern.compile ("(^(https?)://(.*))"); 
+           Matcher m3 = p3.matcher(response.items.included[j].category_gallery);
+    	      assert m3.matches() // ili **
+    	      if (response.items.included[j].promotions == emptyList) {
+    	  	     includedPromotionsEmptyOrNot = true;	
+    	      }
+    	      else if (response.items.included[j].promotions != emptyList){
+    	  	      for (promotion in response.items.included[j].promotions) { 
+    	  		       if (promotion.category_alias != "gift" ){
+    	  			  includedPromotionsEmptyOrNot = false
+    	  		       }
+    	  	      }	
+    	      }
+
+           
+           if (response.items.included[j].product_subtype == "go-services" || response.items.included[j].product_subtype == "calls") {
+           	 assert response.items.included[j].attributes instanceof Object
+           	 for (list in response.items.included[j].attributes) {
+           	 	assert list.value instanceof List
+           	     for (sublist in list.value) {
+           	     	assert sublist.attribute_name instanceof String
+           	     	
+           	     	for (subsublist in sublist.value) {
+           	     		assert subsublist.gallery instanceof String 
+           	          }
+           	     }
+               }
+           } 
+          
+       }
+       
+       assert hasAtLeastOneTvPackage
+       assert hasAtLeastOneCalls
+       assert isRecomandedZeroOrOne
+       assert includedPromotionsEmptyOrNot
+       
+    
+assert is_featuredZeroOrOne
+assert itemsPromotionsEmptyOrNot ]]></scriptText></con:configuration></con:assertion><con:assertion type="JsonPath Existence Match" id="8121ccfd-acd9-4767-b14f-a6fbf111cc3a" name="JsonPath Existence Match"><con:configuration><path>$.name</path><content>true</content><allowWildcards>false</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:assertion type="JsonPath Match" id="5191950a-c184-4d82-aa95-8cc295ca432d" name="JsonPath Match"><con:configuration><path>$.name</path><content>Box 2 (TV + TEL)</content><allowWildcards>false</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:credentials><con:username>root</con:username><con:password>root</con:password><con:domain>https://mts.wm.rs/oec/api/v2/promotions</con:domain><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="Groovy Script" id="d8fecd91-e08f-4917-a2a4-5f87beefa975"><con:settings/><con:config><script><![CDATA[import groovy.json.JsonSlurper
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+def response = new JsonSlurper().parseText(context.response)
+
+assert response.name instanceof Integer
+assert response.title instanceof String
+assert response.promo_text instanceof String
+assert response.items instanceof Object
+
+log.info ("ZARKOOOOOOO" + response)
+log.info response.name
+
+def is_featuredZeroOrOne = true;
+def itemsPromotionsEmptyOrNot = true;
+
+
+assert response.items.id instanceof Integer
+       assert response.items.original_id instanceof Integer
+       assert response.items.external_id instanceof String
+       assert response.items.name instanceof String
+       assert response.items.short_name instanceof String
+       
+       assert response.items.price_recurring instanceof Object
+       Pattern p1 = Pattern.compile ("(\\d+[\\.,\\,]?)+");
+       Matcher m1 = p1.matcher(response.items.price_recurring);
+    	  assert m1.matches()
+    	  assert response.items.is_featured instanceof Integer
+    	  if (response.items.is_featured != 0 && response.items.is_featured != 1) {
+           is_featuredZeroOrOne = false;
+       }
+    	  assert response.items.url instanceof String
+    	  assert response.items.promotions instanceof List
+    	  def emptyList = [];
+    	  if (response.items.promotions == emptyList) {
+    	  	itemsPromotionsEmptyOrNot = true;	
+    	  }
+    	  else if (response.items.promotions != emptyList){
+    	  	for (promotion in response.items.promotions) { 
+    	  		if (promotion.category_alias != "specialOfferAction"){
+    	  			itemsPromotionsEmptyOrNot = false
+    	  		}
+    	  	}	
+    	  }
+    	  assert response.items.included instanceof List
+       def hasAtLeastOneTvPackage = false;
+       def hasAtLeastOneCalls = false;     
+       def isRecomandedZeroOrOne = true;
+       def includedPromotionsEmptyOrNot = true;
+       
+       for (int j=0; j<response.items.included.size(); j++){
+           assert response.items.included[j].id instanceof Integer
+           assert response.items.included[j].original_id instanceof Integer
+           assert response.items.included[j].external_id instanceof String
+           assert response.items.included[j].long_name instanceof String
+           assert response.items.included[j].short_name instanceof String
+           assert response.items.included[j].description instanceof String
+           assert response.items.included[j].product_category instanceof Object
+           Pattern p2 = Pattern.compile ("(tv|tel)"); 
+           Matcher m2 = p2.matcher (response.items.included[j].product_category);
+           assert m2.matches()
+           if (response.items.included[j].product_category == "tv" && response.items.included[j].product_subtype == "tv-package") {
+           	hasAtLeastOneTvPackage = true;
+           }
+
+           if (response.items.included[j].product_category == "tel" && response.items.included[j].product_subtype == "calls") {
+           	hasAtLeastOneCalls = true;
+           }	
+          
+           if (response.items.included[j].is_recommended != 0 && response.items.included[j].is_recommended != 1) {
+           	isRecomandedZeroOrOne = false;
+           }
+           assert response.items.included[j].category_gallery instanceof Object
+           Pattern p3 = Pattern.compile ("(^(https?)://(.*))"); 
+           Matcher m3 = p3.matcher(response.items.included[j].category_gallery);
+    	      assert m3.matches() // ili **
+    	      if (response.items.included[j].promotions == emptyList) {
+    	  	     includedPromotionsEmptyOrNot = true;	
+    	      }
+    	      else if (response.items.included[j].promotions != emptyList){
+    	  	      for (promotion in response.items.included[j].promotions) { 
+    	  		       if (promotion.category_alias != "gift" ){
+    	  			  includedPromotionsEmptyOrNot = false
+    	  		       }
+    	  	      }	
+    	      }
+
+           
+           if (response.items.included[j].product_subtype == "go-services" || response.items.included[j].product_subtype == "calls") {
+           	 assert response.items.included[j].attributes instanceof Object
+           	 for (list in response.items.included[j].attributes) {
+           	 	assert list.value instanceof List
+           	     for (sublist in list.value) {
+           	     	assert sublist.attribute_name instanceof String
+           	     	
+           	     	for (subsublist in sublist.value) {
+           	     		assert subsublist.gallery instanceof String 
+           	          }
+           	     }
+               }
+           } 
+          
+       }
+       
+       assert hasAtLeastOneTvPackage
+       assert hasAtLeastOneCalls
+       assert isRecomandedZeroOrOne
+       assert includedPromotionsEmptyOrNot
+       
+    
+assert is_featuredZeroOrOne
+assert itemsPromotionsEmptyOrNot ]]></script></con:config></con:testStep><con:properties/></con:testCase><con:properties/></con:testSuite><con:properties><con:property><con:name>Domain</con:name><con:value>https://mts.wm.rs/</con:value></con:property></con:properties><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>
