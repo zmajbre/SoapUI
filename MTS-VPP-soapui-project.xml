@@ -223,4 +223,4 @@ assert response.items.id instanceof Integer
        
     
 assert is_featuredZeroOrOne
-assert itemsPromotionsEmptyOrNot ]]></script></con:config></con:testStep><con:properties/></con:testCase><con:properties/></con:testSuite><con:properties><con:property><con:name>Domain</con:name><con:value>https://mts.wm.rs/</con:value></con:property></con:properties><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>
+assert itemsPromotionsEmptyOrNot ]]></script></con:config></con:testStep><con:testStep type="properties" name="Properties" id="3d986482-05dc-419e-9571-eb76475aaf6c"><con:settings/><con:config xsi:type="con:PropertiesStep" saveFirst="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:properties/></con:config></con:testStep><con:properties/></con:testCase><con:properties/></con:testSuite><con:properties><con:property><con:name>Domain</con:name><con:value>https://mts.wm.rs/</con:value></con:property></con:properties><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>
